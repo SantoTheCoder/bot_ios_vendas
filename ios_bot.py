@@ -2,6 +2,8 @@ import logging
 import requests
 import random
 import string
+import os
+from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
@@ -27,9 +29,10 @@ class IOSBot:
         logger.info("Sending request to API with data: %s", data)
         try:
             response = requests.post(self.base_url, headers=self.headers, data=data)
+            response.raise_for_status()  # Levanta exceção para códigos de status HTTP >= 400
             logger.info("Response received: %s", response.text)
             return response.json()
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             logger.error("Error during API request: %s", e)
             return {"error": str(e)}
 
@@ -51,9 +54,14 @@ class IOSBot:
                 'disable_web_page_preview': disable_preview
             }
             response = requests.post(url, data=data)
+            response.raise_for_status()  # Levanta exceção para códigos de status HTTP >= 400
             logger.info("Message sent. Response: %s", response.text)
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             logger.error("Error sending message to Telegram: %s", e)
+
+    def calculate_validity_date(self):
+        validity_date = datetime.now() + timedelta(days=self.default_validity_days)
+        return validity_date.strftime("%d/%m/%Y")
 
     def create_user(self, limit, username=None, password=None):
         logger.info("Creating user with limit: %d", limit)
@@ -61,6 +69,8 @@ class IOSBot:
             username = self.generate_random_string()
         if password is None:
             password = self.generate_random_string()
+
+        validity_date = self.calculate_validity_date()
 
         data = {
             'passapi': self.api_key,
@@ -81,7 +91,7 @@ class IOSBot:
                 "🔑 *Senha:*\n"
                 f"`{password}`\n\n"
                 "🎯 *Validade:*\n"
-                "30/08/2024\n\n"
+                f"{validity_date}\n\n"
                 "🕟 *Limite:*\n"
                 f"{limit}\n\n"
                 "[📱 *APLICATIVOS (Clique Aqui)*](https://apps.apple.com/us/app/npv-tunnel/id1629465476)\n"
@@ -90,7 +100,6 @@ class IOSBot:
                 "Suporte: @Pedrooo\n\n"
                 "_Esse link servirá para você fazer as suas renovações_"
             )
-            # Enviar para o canal e para o usuário
             self.notify_telegram(success_message, chat_id=self.telegram_chat_id)
             logger.info(success_message)
             return success_message
@@ -106,6 +115,8 @@ class IOSBot:
             username = self.generate_random_string()
         if password is None:
             password = self.generate_random_string()
+
+        validity_date = self.calculate_validity_date()
 
         data = {
             'passapi': self.api_key,
@@ -125,14 +136,13 @@ class IOSBot:
                 "🔑 *Senha:*\n"
                 f"`{password}`\n\n"
                 "🎯 *Validade:*\n"
-                "30/08/2024\n\n"
+                f"{validity_date}\n\n"
                 "🕟 *Limite:*\n"
                 f"{limit}\n\n"
                 "💥 Obrigado por usar nossos serviços!\n\n"
                 "🔗 [*Link do Painel (Clique Aqui)*](https://poisonbrasil.atlasssh.com/)\n\n"
                 "Suporte: @Pedrooo"
             )
-            # Enviar para o canal e para o usuário
             self.notify_telegram(success_message, chat_id=self.telegram_chat_id)
             logger.info(success_message)
             return success_message
@@ -143,9 +153,9 @@ class IOSBot:
             return error_message
 
 # Configuração do bot Telegram e API do painel
-API_KEY = '7297529152:AAGxWksMJynOnC1iUZLFAHuKBwdxyXoEclQ'
-IOS_API_KEY = 'quafJv1C6i8FI4WKAMB9SnLnDn'  # Nova senha da API
-TELEGRAM_CHAT_ID = '-1002225678009'  # ID do canal ou grupo do Telegram
+API_KEY = os.getenv('TELEGRAM_API_KEY', '7297529152:AAGxWksMJynOnC1iUZLFAHuKBwdxyXoEclQ')
+IOS_API_KEY = os.getenv('IOS_API_KEY', 'qrk9drkGiwdcESg0GMcegQIfK0')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '-1002225678009')
 ios_bot = IOSBot(IOS_API_KEY, API_KEY, TELEGRAM_CHAT_ID)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
