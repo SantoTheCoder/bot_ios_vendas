@@ -1,0 +1,16 @@
+{
+    "revendedores": {
+        "5197753914": {
+            "username": "mjhqy3",
+            "limite": 10,
+            "data_compra": "02/08/2024 20:01:58",
+            "validade": "31/10/2024"
+        },
+        "5804629795": {
+            "username": "Oxe0Qp",
+            "limite": 10,
+            "data_compra": "02/08/2024 19:52:35",
+            "validade": "01/09/2024"
+        }
+    }
+}

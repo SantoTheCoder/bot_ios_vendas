@@ -4,12 +4,50 @@ from mercadopago import gerar_qr_code_mercado_pago, mp, verificar_pagamento_pix
 import logging
 import asyncio
 import base64
-from datetime import datetime  # Importar datetime para obter a data da compra
-from users import distribute_user  # Importando a função de distribuição de usuário
-from resellers import create_reseller  # Importando a função de criação de revendedor
-from notifications import notify_telegram  # Importando a função de notificação
+from datetime import datetime, timedelta
+from users import distribute_user
+from resellers import create_reseller
+from notifications import notify_telegram
+import json
+import os
+import requests
+from config import IOS_API_KEY  # Importa a chave de API do config.py
 
 logger = logging.getLogger(__name__)
+
+REVENDERS_FILE = 'revendedores.json'
+
+# Funções para carregar e salvar dados dos revendedores
+def load_revendores():
+    if os.path.exists(REVENDERS_FILE):
+        with open(REVENDERS_FILE, 'r') as file:
+            try:
+                data = json.load(file)
+                return data
+            except json.JSONDecodeError:
+                # Se o arquivo estiver vazio ou corrompido, inicialize um JSON vazio
+                return {"revendedores": {}}
+    return {"revendedores": {}}
+
+def save_revendores(data):
+    with open(REVENDERS_FILE, 'w') as file:
+        json.dump(data, file, indent=4)
+
+def renovar_revendedor_painel(username):
+    url = "https://poisonbrasil.atlasssh.com/core/apiatlas.php"
+    data = {
+        'passapi': IOS_API_KEY,
+        'module': 'renewrev',
+        'user': username
+    }
+
+    response = requests.post(url, data=data)
+    if response.status_code == 200:
+        logger.info(f"Revendedor {username} renovado com sucesso no painel.")
+        return response.text
+    else:
+        logger.error(f"Erro ao renovar revendedor {username} no painel: {response.text}")
+        return None
 
 planos = {
     'usuario': {
@@ -80,14 +118,15 @@ async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT_TYPE, tipo: str, preco_final: float, limite: int):
     data_compra = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    chat_info = await context.bot.get_chat(chat_id)  # Aguarda a chamada assíncrona
+    chat_info = await context.bot.get_chat(chat_id)
     nome_comprador = chat_info.first_name
     id_comprador = chat_id
 
+    revendedores = load_revendores()
+
     if tipo == "usuario":
-        user = distribute_user()  # Distribui um usuário existente
+        user = distribute_user() 
         if user:
-            # Mensagem enviada ao comprador
             user_message = (
                 "🎉 **Usuário Criado com Sucesso!** 🎉\n\n"
                 f"🔎 **Usuário:**\n`{user['username']}`\n\n"
@@ -107,32 +146,67 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
             await context.bot.send_message(chat_id=chat_id, text=user_message, parse_mode="Markdown", disable_web_page_preview=True)
             logger.info(f"Mensagem de usuário enviada para {chat_id}")
 
-            # Mensagem enviada ao canal com informações financeiras
             canal_message = (
-                user_message +  # Adiciona a mensagem sem as informações financeiras
+                user_message +  
                 f"\n\n💵 **Valor:** R$ {preco_final:.2f}\n"
                 f"📅 **Data da Compra:** {data_compra}\n"
                 f"👤 **Comprador:** {nome_comprador} (ID: {id_comprador})"
             )
 
-            # Notificar e fixar a mensagem no canal
             notify_telegram(canal_message, pin_message=True)
 
     elif tipo == "revenda" and limite:
-        reseller_info = create_reseller(limit=limite)  # Cria um novo revendedor com a cota específica
-        if reseller_info:
-            # Mensagem enviada ao comprador
-            reseller_message = (
-                reseller_info +
-                f"\n\n💵 **Valor:** R$ {preco_final:.2f}\n"
-                f"📅 **Data da Compra:** {data_compra}\n"
-                f"👤 **Comprador:** {nome_comprador} (ID: {id_comprador})"
-            )
-            await context.bot.send_message(chat_id=chat_id, text=reseller_info, parse_mode="Markdown", disable_web_page_preview=True)
-            logger.info(f"Mensagem de revendedor enviada para {chat_id}")
+        if str(chat_id) in revendedores["revendedores"]:
+            reseller_info = revendedores["revendedores"][str(chat_id)]
+            username = reseller_info["username"]
 
-            # Notificar e fixar a mensagem no canal
-            notify_telegram(reseller_message, pin_message=True)
+            # Renova a validade do revendedor existente no painel
+            resultado_renovacao = renovar_revendedor_painel(username)
+            if resultado_renovacao:
+                validade_antiga = datetime.strptime(reseller_info["validade"], "%d/%m/%Y")
+                nova_validade = (validade_antiga + timedelta(days=30)).strftime("%d/%m/%Y")
+                reseller_info["validade"] = nova_validade
+                reseller_info["data_compra"] = data_compra
+
+                save_revendores(revendedores)
+
+                reseller_message = (
+                    f"🔄 *Renovação de Revendedor* 🔄\n\n"
+                    f"🔎 *Revendedor:* `{username}`\n"
+                    f"📅 *Nova Validade:* {nova_validade}\n"
+                )
+            else:
+                reseller_message = "Erro ao renovar revendedor no painel. Por favor, tente novamente mais tarde."
+        else:
+            reseller_info = create_reseller(limit=limite)
+            if reseller_info:
+                username = reseller_info.split("`")[1]
+                validade = (datetime.now() + timedelta(days=30)).strftime("%d/%m/%Y")
+                revendedores["revendedores"][str(chat_id)] = {
+                    "username": username,
+                    "limite": limite,
+                    "data_compra": data_compra,
+                    "validade": validade
+                }
+                save_revendores(revendedores)
+
+                reseller_message = (
+                    reseller_info
+                )
+
+        # Enviar a mensagem ao comprador sem as informações financeiras
+        await context.bot.send_message(chat_id=chat_id, text=reseller_message, parse_mode="Markdown", disable_web_page_preview=True)
+        logger.info(f"Mensagem de revendedor enviada para {chat_id}")
+
+        # Adicionar as informações financeiras apenas na mensagem enviada ao canal
+        canal_message = (
+            reseller_message +
+            f"\n\n💵 **Valor:** R$ {preco_final:.2f}\n"
+            f"📅 **Data da Compra:** {data_compra}\n"
+            f"👤 **Comprador:** {nome_comprador} (ID: {id_comprador})"
+        )
+
+        notify_telegram(canal_message, pin_message=True)
 
 async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo, limite: int):
     while True:
