@@ -1,4 +1,3 @@
-#users.py
 import json
 import random
 import string
@@ -44,7 +43,7 @@ def create_users(number_of_users):
         user_data = {
             'username': username,
             'password': password,
-            'creation_date': creation_date,  # Adiciona a data de criação
+            'creation_date': creation_date,
             'validity_date': validity_date,
             'limit': DEFAULT_USER_LIMIT,
             'activated': False,
@@ -93,9 +92,13 @@ def activate_user(username):
             user['activated'] = True
             user['sale_date'] = datetime.now().strftime("%d/%m/%Y")
             
+            # Verifica se o usuário tem a chave 'creation_date', caso contrário, define uma data padrão
+            if 'creation_date' not in user:
+                logger.warning(f"O usuário {username} não tem 'creation_date', definindo para a data atual.")
+                user['creation_date'] = datetime.now().strftime("%d/%m/%Y")
+
             # Recalcular a data de validade com base na data de criação
             creation_date = datetime.strptime(user['creation_date'], "%d/%m/%Y")
-            days_since_creation = (datetime.now() - creation_date).days
             new_validity_date = (creation_date + timedelta(days=DEFAULT_VALIDITY_DAYS)).strftime("%d/%m/%Y")
             user['validity_date'] = new_validity_date
             
@@ -128,5 +131,5 @@ def simulate_sale():
 async def create_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Received /createuser command")
     new_users = create_users(10)
-    user_list = "\n".join([f"Usuário: {user['username']} - Senha: {user['password']}" for user in new_users])
+    user_list = "\n".join([f"Usuário: `{user['username']}` - Senha: `{user['password']}`" for user in new_users])
     await update.message.reply_text(f"10 novos usuários criados:\n\n{user_list}", parse_mode="Markdown", disable_web_page_preview=True)

@@ -1,4 +1,3 @@
-#main.py
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -7,7 +6,7 @@ from notifications import start_scheduled_jobs, report_command  # Importando rep
 from sales_simulation import simulate_sale_command
 from resellers import create_reseller_command
 from users import create_user_command
-from menu import start_command, button_handler  # Importando o menu
+from menu import start_command, button_handler, revenda_menu  # Importando o menu e o sub-menu de revenda
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,6 +27,10 @@ def main():
     application.add_handler(CommandHandler("createuser", create_user_command))
     application.add_handler(CommandHandler("simulate_sale", simulate_sale_command))
     application.add_handler(CommandHandler("report", report_command))  # Adicionando handler para /report
+
+    # Adicionando handler para o sub-menu de revenda
+    application.add_handler(CallbackQueryHandler(revenda_menu, pattern='revenda_menu'))
+    application.add_handler(CallbackQueryHandler(start_command, pattern='start'))  # Voltar ao início
 
     logger.info("Starting scheduled jobs...")
     start_scheduled_jobs()

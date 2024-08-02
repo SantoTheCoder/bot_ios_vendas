@@ -1,3 +1,4 @@
+#sales.py
 import logging
 from datetime import datetime, timedelta
 from users import distribute_user
@@ -35,13 +36,33 @@ def process_sale():
 
         renewed = renew_user(user['username'], days_to_extend)
         if renewed:
+            sale_date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            sale_value = 1  # Substitua pelo valor real da venda
+            buyer_username = user['username']  # O nome de usuário do comprador
+            buyer_name = "Nome Teste"  # Substitua pelo nome real do comprador
+            
+            # Mensagem detalhada enviada ao canal
             sale_message = (
-                "🎉 *Usuário Vendido* 🎉\n\n"
-                f"🔎 *Usuário:* `{user['username']}`\n"
-                f"🔑 *Senha:* `{user['password']}`\n"
-                f"🎯 *Validade:* 30 dias\n\n"
-                "Obrigado por sua compra!"
+                "🎉 *Usuário Criado com Sucesso!* 🎉\n\n"
+                f"🗓 *Data da Venda:* {sale_date}\n"
+                f"💵 *Valor:* R$ {sale_value:.2f}\n"
+                f"👤 *Comprador:* {buyer_username}\n"
+                f"📛 *Nome:* {buyer_name}\n\n"
+                f"🔎 *Usuário:*\n`{user['username']}`\n\n"
+                f"🔑 *Senha:*\n`{user['password']}`\n\n"
+                f"🎯 *Validade:*\n`{user['validity_date']}`\n\n"
+                f"🕟 *Limite de Conexões:*\n`{user['limit']}`\n\n"
+                "📱 *Aplicativos e Arquivos de Configuração:*\n\n"
+                "- *Para iOS:*\n"
+                "  - *Aplicativo:* [Baixe aqui](https://apps.apple.com/us/app/npv-tunnel/id1629465476)\n"
+                "  - *Arquivos de Configuração:* [Clique aqui](https://t.me/+R72mmGw8JMdiZWEx)\n\n"
+                "- *Para Android:*\n"
+                "  - *Aplicativo:* [Baixe aqui](https://www.mediafire.com/file/4l22uh78g37o1yl/Poison+5g+-+DT.apk/file)\n\n"
+                "🌍 *Link de Renovação:*\n"
+                "[Renove aqui](https://poisonbrasil.atlasssh.com/renovar.php)\n"
+                "*Use este link para realizar suas renovações futuras.*"
             )
+            # Enviar a mensagem ao canal
             notify_telegram(sale_message)
             return sale_message
         else:

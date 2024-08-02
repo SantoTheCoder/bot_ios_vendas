@@ -5,6 +5,7 @@ from notifications import notify_telegram
 from utils import make_request, generate_random_string
 from telegram import Update
 from telegram.ext import ContextTypes
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +31,9 @@ def create_reseller(limit=DEFAULT_RESELLER_LIMIT, username=None, password=None):
         success_message = (
             "🎉 *Revendedor Criado* 🎉\n\n"
             "🔎 *Usuário:*\n"
-            f"{username}\n\n"
+            f"`{username}`\n\n"
             "🔑 *Senha:*\n"
-            f"{password}\n\n"
+            f"`{password}`\n\n"
             "🎯 *Validade:*\n"
             "30 dias\n\n"
             "🕟 *Limite:*\n"
@@ -43,6 +44,24 @@ def create_reseller(limit=DEFAULT_RESELLER_LIMIT, username=None, password=None):
         )
         notify_telegram(success_message)
         logger.info(success_message)
+
+        # Adicionando informações financeiras na notificação ao canal
+        sale_date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        sale_value = 1  # Substitua pelo valor real da revenda, se necessário
+        buyer_username = "comprador_teste_revenda"  # Substitua pelo nome de usuário do revendedor
+        buyer_name = "Nome Teste Revenda"  # Substitua pelo nome real do revendedor
+
+        financial_message = (
+            f"🎉 *Detalhes da Revenda* 🎉\n\n"
+            f"🗓 *Data da Venda:* {sale_date}\n"
+            f"💵 *Valor:* R$ {sale_value:.2f}\n"
+            f"👤 *Comprador:* {buyer_username}\n"
+            f"📛 *Nome:* {buyer_name}\n\n"
+            "Revendedor criado com sucesso!"
+        )
+        notify_telegram(financial_message)
+        logger.info(financial_message)
+
         return success_message
     else:
         error_message = f"Erro ao criar revendedor: {result}"

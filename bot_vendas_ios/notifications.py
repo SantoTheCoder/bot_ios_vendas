@@ -47,12 +47,12 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     inactive_users = get_inactive_users()
 
     active_list = "\n".join([
-        f"Usuário: {user['username']} - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}` - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
         for user in active_users
     ])
 
     inactive_list = "\n".join([
-        f"Usuário: {user['username']} - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}` - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
         for user in inactive_users
     ])
 
@@ -74,12 +74,12 @@ def send_daily_report():
     inactive_users = get_inactive_users()
 
     active_list = "\n".join([
-        f"Usuário: {user['username']} - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}` - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
         for user in active_users
     ])
 
     inactive_list = "\n".join([
-        f"Usuário: {user['username']} - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}` - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
         for user in inactive_users
     ])
 
