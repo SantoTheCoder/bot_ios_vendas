@@ -1,3 +1,4 @@
+#notifications.py
 import requests
 import logging
 import schedule
@@ -5,12 +6,12 @@ import time
 import threading
 from config import API_KEY, TELEGRAM_CHAT_ID
 from users import get_active_users, get_inactive_users
-from telegram import Update  # Importando Update
-from telegram.ext import ContextTypes  # Importando ContextTypes
+from telegram import Update
+from telegram.ext import ContextTypes
 
 logger = logging.getLogger(__name__)
 
-def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID):
+def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID, pin_message=False):
     url = f"https://api.telegram.org/bot{API_KEY}/sendMessage"
     data = {
         'chat_id': chat_id,
@@ -22,6 +23,21 @@ def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID):
         response = requests.post(url, data=data)
         response.raise_for_status()
         logger.info(f"Message sent to Telegram: {message}")
+        
+        # Pinar a mensagem se solicitado
+        if pin_message:
+            message_id = response.json().get("result", {}).get("message_id")
+            if message_id:
+                pin_url = f"https://api.telegram.org/bot{API_KEY}/pinChatMessage"
+                pin_data = {
+                    'chat_id': chat_id,
+                    'message_id': message_id,
+                    'disable_notification': True  # Não notificar todos os membros do canal
+                }
+                pin_response = requests.post(pin_url, data=pin_data)
+                pin_response.raise_for_status()
+                logger.info(f"Message pinned to Telegram: {message_id}")
+                
     except requests.exceptions.RequestException as e:
         logger.error(f"Error sending message to Telegram: {e}")
 
@@ -31,12 +47,12 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     inactive_users = get_inactive_users()
 
     active_list = "\n".join([
-        f"Usuário: `{user['username']}` - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
+        f"Usuário: {user['username']} - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
         for user in active_users
     ])
 
     inactive_list = "\n".join([
-        f"Usuário: `{user['username']}` - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
+        f"Usuário: {user['username']} - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
         for user in inactive_users
     ])
 
@@ -58,12 +74,12 @@ def send_daily_report():
     inactive_users = get_inactive_users()
 
     active_list = "\n".join([
-        f"Usuário: `{user['username']}` - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
+        f"Usuário: {user['username']} - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
         for user in active_users
     ])
 
     inactive_list = "\n".join([
-        f"Usuário: `{user['username']}` - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
+        f"Usuário: {user['username']} - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
         for user in inactive_users
     ])
 

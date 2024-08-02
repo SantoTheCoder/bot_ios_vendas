@@ -1,3 +1,4 @@
+#sales_simulation.py
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -11,10 +12,10 @@ async def simulate_sale_command(update: Update, context: ContextTypes.DEFAULT_TY
     if user:
         message = (
             "🎉 *Usuário Criado com Sucesso\\!* 🎉\n\n"
-            f"🔎 *Usuário:*\n`{user['username']}`\n\n"
-            f"🔑 *Senha:*\n`{user['password']}`\n\n"
-            f"🎯 *Validade:*\n`{user['validity_date']}`\n\n"
-            f"🕟 *Limite de Conexões:*\n`{user['limit']}`\n\n"
+            f"🔎 *Usuário:*\n{user['username']}\n\n"
+            f"🔑 *Senha:*\n{user['password']}\n\n"
+            f"🎯 *Validade:*\n{user['validity_date']}\n\n"
+            f"🕟 *Limite de Conexões:*\n{user['limit']}\n\n"
             "📱 *Aplicativos e Arquivos de Configuração:*\n\n"
             "\\- *Para iOS:*\n"
             "  \\- *Aplicativo:* [Baixe aqui](https://apps.apple.com/us/app/npv-tunnel/id1629465476)\n"

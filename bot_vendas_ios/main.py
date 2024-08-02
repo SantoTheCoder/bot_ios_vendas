@@ -1,8 +1,9 @@
+#main.py
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from config import API_KEY
-from notifications import start_scheduled_jobs
+from notifications import start_scheduled_jobs, report_command  # Importando report_command
 from sales_simulation import simulate_sale_command
 from resellers import create_reseller_command
 from users import create_user_command
@@ -26,6 +27,7 @@ def main():
     application.add_handler(CommandHandler("createreseller", create_reseller_command))
     application.add_handler(CommandHandler("createuser", create_user_command))
     application.add_handler(CommandHandler("simulate_sale", simulate_sale_command))
+    application.add_handler(CommandHandler("report", report_command))  # Adicionando handler para /report
 
     logger.info("Starting scheduled jobs...")
     start_scheduled_jobs()

@@ -1,3 +1,4 @@
+#users.py
 import json
 import random
 import string
@@ -37,11 +38,13 @@ def create_users(number_of_users):
     for _ in range(number_of_users):
         username = generate_random_string(8)
         password = generate_random_string(8)
+        creation_date = datetime.now().strftime("%d/%m/%Y")
         validity_date = (datetime.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)).strftime("%d/%m/%Y")
         
         user_data = {
             'username': username,
             'password': password,
+            'creation_date': creation_date,  # Adiciona a data de criação
             'validity_date': validity_date,
             'limit': DEFAULT_USER_LIMIT,
             'activated': False,
@@ -90,9 +93,10 @@ def activate_user(username):
             user['activated'] = True
             user['sale_date'] = datetime.now().strftime("%d/%m/%Y")
             
-            # Recalcular a data de validade com base na data de venda
-            days_since_creation = (datetime.now() - datetime.strptime(user['sale_date'], "%d/%m/%Y")).days
-            new_validity_date = (datetime.now() + timedelta(days=DEFAULT_VALIDITY_DAYS)).strftime("%d/%m/%Y")
+            # Recalcular a data de validade com base na data de criação
+            creation_date = datetime.strptime(user['creation_date'], "%d/%m/%Y")
+            days_since_creation = (datetime.now() - creation_date).days
+            new_validity_date = (creation_date + timedelta(days=DEFAULT_VALIDITY_DAYS)).strftime("%d/%m/%Y")
             user['validity_date'] = new_validity_date
             
             save_users(users)
@@ -124,5 +128,5 @@ def simulate_sale():
 async def create_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Received /createuser command")
     new_users = create_users(10)
-    user_list = "\n".join([f"Usuário: `{user['username']}` - Senha: `{user['password']}`" for user in new_users])
+    user_list = "\n".join([f"Usuário: {user['username']} - Senha: {user['password']}" for user in new_users])
     await update.message.reply_text(f"10 novos usuários criados:\n\n{user_list}", parse_mode="Markdown", disable_web_page_preview=True)

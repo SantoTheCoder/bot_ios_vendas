@@ -1,3 +1,4 @@
+#resellers.py
 import logging
 from config import IOS_API_KEY, DEFAULT_RESELLER_LIMIT
 from notifications import notify_telegram
@@ -29,9 +30,9 @@ def create_reseller(limit=DEFAULT_RESELLER_LIMIT, username=None, password=None):
         success_message = (
             "🎉 *Revendedor Criado* 🎉\n\n"
             "🔎 *Usuário:*\n"
-            f"`{username}`\n\n"
+            f"{username}\n\n"
             "🔑 *Senha:*\n"
-            f"`{password}`\n\n"
+            f"{password}\n\n"
             "🎯 *Validade:*\n"
             "30 dias\n\n"
             "🕟 *Limite:*\n"
