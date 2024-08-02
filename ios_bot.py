@@ -63,14 +63,14 @@ class IOSBot:
         validity_date = datetime.now() + timedelta(days=self.default_validity_days)
         return validity_date.strftime("%d/%m/%Y")
 
-    def create_user(self, limit, username=None, password=None):
+    def create_user(self, limit=1, username=None, password=None, validity_days=30, whatsapp="1234567890"):
         logger.info("Creating user with limit: %d", limit)
         if username is None:
             username = self.generate_random_string()
         if password is None:
             password = self.generate_random_string()
 
-        validity_date = self.calculate_validity_date()
+        validity_date = (datetime.now() + timedelta(days=validity_days)).strftime("%d/%m/%Y")
 
         data = {
             'passapi': self.api_key,
@@ -78,8 +78,11 @@ class IOSBot:
             'user': username,
             'pass': password,
             'admincid': 1,  # ID da categoria, ajuste conforme necessário
-            'validadeusuario': self.default_validity_days,
-            'userlimite': limit
+            'validadeusuario': validity_days,
+            'userlimite': limit,
+            'v2ray': "NÃO",
+            'notas': "",
+            'whatsapp': whatsapp
         }
         result = self.make_request(data)
 
@@ -109,14 +112,14 @@ class IOSBot:
             logger.error(error_message)
             return error_message
 
-    def create_reseller(self, limit, username=None, password=None):
+    def create_reseller(self, limit=10, username=None, password=None, validity_days=30, whatsapp="1234567890"):
         logger.info("Creating reseller with limit: %d", limit)
         if username is None:
             username = self.generate_random_string()
         if password is None:
             password = self.generate_random_string()
 
-        validity_date = self.calculate_validity_date()
+        validity_date = (datetime.now() + timedelta(days=validity_days)).strftime("%d/%m/%Y")
 
         data = {
             'passapi': self.api_key,
@@ -125,6 +128,7 @@ class IOSBot:
             'pass': password,
             'admincid': 1,  # ID da categoria, ajuste conforme necessário
             'userlimite': limit,
+            'whatsapp': whatsapp
         }
         result = self.make_request(data)
 
@@ -163,12 +167,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def create_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
     limit = 1  # Defina o limite padrão para 1 conexão
-    message = ios_bot.create_user(limit=limit)
+    validity_days = 30  # Validade padrão de 30 dias
+    message = ios_bot.create_user(limit=limit, validity_days=validity_days)
     await update.message.reply_text(message, parse_mode="Markdown", disable_web_page_preview=True)
 
 async def create_reseller(update: Update, context: ContextTypes.DEFAULT_TYPE):
     limit = 10  # Defina o limite padrão para revendedores
-    message = ios_bot.create_reseller(limit=limit)
+    validity_days = 30  # Validade padrão de 30 dias
+    message = ios_bot.create_reseller(limit=limit, validity_days=validity_days)
     await update.message.reply_text(message, parse_mode="Markdown", disable_web_page_preview=True)
 
 def main():
