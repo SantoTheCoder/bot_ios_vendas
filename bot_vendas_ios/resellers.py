@@ -60,5 +60,8 @@ async def create_reseller_command(update: Update, context: ContextTypes.DEFAULT_
     # Criar o revendedor
     reseller_info = create_reseller(username=username, password=password)
     
-    # Enviar a mensagem de sucesso ou erro ao usuário
-    await update.message.reply_text(reseller_info, parse_mode="Markdown", disable_web_page_preview=True)
+    # Verificar se é um comando ou um callback query
+    if update.message:
+        await update.message.reply_text(reseller_info, parse_mode="Markdown", disable_web_page_preview=True)
+    elif update.callback_query:
+        await update.callback_query.edit_message_text(reseller_info, parse_mode="Markdown", disable_web_page_preview=True)
