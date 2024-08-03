@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 def create_affiliate_link(user_id):
     return f"https://t.me/{BOT_NAME.lstrip('@')}?start={user_id}"
 
-def record_affiliate_purchase(affiliate_id, referred_user_id, context):
+async def record_affiliate_purchase(affiliate_id, referred_user_id, context):
     conn = get_db_connection()
     if conn is None:
         logger.error("Erro ao conectar ao banco de dados ao tentar registrar a compra do afiliado.")
@@ -34,7 +34,7 @@ def record_affiliate_purchase(affiliate_id, referred_user_id, context):
     finally:
         conn.close()
 
-    success = grant_user_voucher(affiliate_id, context)
+    success = await grant_user_voucher(affiliate_id, context)
     
     if success:
         logger.info(f"Vale usuário de 30 dias concedido ao afiliado {affiliate_id}")
@@ -100,7 +100,6 @@ async def handle_affiliate_start(update: Update, context: ContextTypes.DEFAULT_T
         logger.info(f"Usuário {user_id} iniciou o bot através do link de afiliação de {referrer_id}")
         context.user_data['referrer_id'] = referrer_id  # Armazena o ID do afiliado
 
-        # Verificar se o usuário já foi registrado para evitar múltiplos registros
         conn = get_db_connection()
         if conn is not None:
             cursor = conn.cursor()
@@ -111,8 +110,7 @@ async def handle_affiliate_start(update: Update, context: ContextTypes.DEFAULT_T
                 already_registered = cursor.fetchone()[0]
                 
                 if not already_registered:
-                    # Registra a indicação imediatamente
-                    record_affiliate_purchase(referrer_id, user_id, context)
+                    await record_affiliate_purchase(referrer_id, user_id, context)
             except Exception as e:
                 logger.error(f"Erro ao verificar o usuário no banco de dados: {e}")
             finally:
@@ -123,7 +121,7 @@ async def handle_affiliate_start(update: Update, context: ContextTypes.DEFAULT_T
     else:
         logger.info(f"Usuário {user_id} iniciou o bot sem link de afiliação.")
 
-def grant_user_voucher(affiliate_id, context):
+async def grant_user_voucher(affiliate_id, context):
     voucher_message = (
         "🎉 *Parabéns!* 🎉\n\n"
         "Você recebeu um *Vale Usuário* de 30 dias pelo sucesso em indicar um novo cliente! 🏆\n\n"
@@ -137,11 +135,11 @@ def grant_user_voucher(affiliate_id, context):
     )
     
     logger.info(f"Enviando vale usuário para o afiliado {affiliate_id}")
-    return notify_affiliate(affiliate_id, voucher_message, context)
+    return await notify_affiliate(affiliate_id, voucher_message, context)
 
-def notify_affiliate(affiliate_id, message, context):
+async def notify_affiliate(affiliate_id, message, context):
     try:
-        context.bot.send_message(chat_id=affiliate_id, text=message, parse_mode=ParseMode.MARKDOWN)
+        await context.bot.send_message(chat_id=affiliate_id, text=message, parse_mode=ParseMode.MARKDOWN)
         return True
     except Exception as e:
         logger.error(f"Erro ao enviar mensagem ao afiliado {affiliate_id}: {e}")
