@@ -7,7 +7,9 @@ from sales_simulation import simulate_sale_command
 from resellers import create_reseller_command
 from users import create_user_command
 from menu import start_command, button_handler, revenda_menu
-from affiliate_system import setup_affiliate_handlers, handle_affiliate_start  # Importa as funções do sistema de afiliação
+from affiliate_system import setup_affiliate_handlers, handle_affiliate_start
+from broadcast import setup_broadcast_handlers
+from database import get_db_connection  # Adicionado para registrar os usuários
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -16,6 +18,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Registra o usuário na tabela 'users'
+    chat_id = update.effective_user.id
+    username = update.effective_user.username
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+    INSERT OR IGNORE INTO users (chat_id, username)
+    VALUES (?, ?)
+    ''', (chat_id, username))
+
+    conn.commit()
+    conn.close()
+    logger.info(f"Usuário {chat_id} ({username}) registrado no banco de dados.")
+
     # Verifica se o usuário iniciou o bot com um link de afiliado
     if context.args:
         await handle_affiliate_start(update, context)
@@ -38,6 +56,9 @@ def main():
 
     # Configurando o sistema de afiliação
     setup_affiliate_handlers(application)
+
+    # Configurando o sistema de broadcast
+    setup_broadcast_handlers(application)
 
     logger.info("Starting scheduled jobs...")
     start_scheduled_jobs()

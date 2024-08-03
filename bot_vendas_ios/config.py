@@ -18,3 +18,4 @@ CIDADE_RECEBEDOR = os.getenv('CIDADE_RECEBEDOR', 'Campinas')
 BOT_NAME = os.getenv('BOT_NAME', '@IOS_TESTE_BOT')
 
 SUPPORT_CONTACT = os.getenv('SUPPORT_CONTACT', '@Pedrooo')
+ADMIN_ID = '5197753914'

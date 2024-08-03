@@ -26,5 +26,27 @@ def create_affiliates_table():
     finally:
         conn.close()
 
-# Execute esta função uma vez para criar a tabela
+def create_users_table():
+    try:
+        conn = sqlite3.connect('database.db')  # Substitua pelo caminho correto para o seu banco de dados
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chat_id TEXT NOT NULL,
+            username TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+        
+        conn.commit()
+        logger.info("Tabela 'users' criada ou já existente no banco de dados.")
+    except sqlite3.Error as e:
+        logger.error(f"Erro ao criar a tabela 'users': {e}")
+    finally:
+        conn.close()
+
+# Execute as funções uma vez para criar as tabelas
 create_affiliates_table()
+create_users_table()
