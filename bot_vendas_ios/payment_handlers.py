@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
+from telegram import Update, InlineKeyboardButton, InputFile
 from telegram.ext import ContextTypes
 from mercadopago import gerar_qr_code_mercado_pago, mp, verificar_pagamento_pix
 import logging
@@ -26,7 +26,6 @@ def load_revendores():
                 data = json.load(file)
                 return data
             except json.JSONDecodeError:
-                # Se o arquivo estiver vazio ou corrompido, inicialize um JSON vazio
                 return {"revendedores": {}}
     return {"revendedores": {}}
 
@@ -91,7 +90,7 @@ async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if plano_info:
         preco_final = plano_info['preco']
         tipo = plano_info['tipo']
-        limite = plano_info.get('limite', None)  # Usa 'None' se não houver 'limite'
+        limite = plano_info.get('limite', None)
 
         qr_code_data = gerar_qr_code_mercado_pago(preco_final)
 
@@ -114,7 +113,6 @@ async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.message.reply_text(text=message, parse_mode='Markdown')
             logger.info(f"QR Code enviado para o usuário {query.message.chat_id}")
 
-            # Iniciar a verificação de pagamento
             asyncio.create_task(verificar_pagamento_pix(mp, qr_code_data['id'], query.message.chat.id, context, tipo, limite))
 
 async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT_TYPE, tipo: str, preco_final: float, limite: int):
@@ -161,7 +159,6 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
             reseller_info = revendedores["revendedores"][str(chat_id)]
             username = reseller_info["username"]
 
-            # Renova a validade do revendedor existente no painel
             resultado_renovacao = renovar_revendedor_painel(username)
             if resultado_renovacao:
                 validade_antiga = datetime.strptime(reseller_info["validade"], "%d/%m/%Y")
@@ -195,11 +192,9 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
                     reseller_info
                 )
 
-        # Enviar a mensagem ao comprador sem as informações financeiras
         await context.bot.send_message(chat_id=chat_id, text=reseller_message, parse_mode="Markdown", disable_web_page_preview=True)
         logger.info(f"Mensagem de revendedor enviada para {chat_id}")
 
-        # Adicionar as informações financeiras apenas na mensagem enviada ao canal
         canal_message = (
             reseller_message +
             f"\n\n💵 **Valor:** R$ {preco_final:.2f}\n"
@@ -209,7 +204,6 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
 
         notify_telegram(canal_message, pin_message=True)
 
-    # Verifica se o usuário foi indicado por um afiliado e registra a compra
     referrer_id = context.user_data.get('referrer_id')
     if referrer_id:
         logger.info(f"Registrando compra do usuário {chat_id} referenciado pelo afiliado {referrer_id}")
@@ -224,4 +218,4 @@ async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo, limi
         if status == 'approved':
             await process_successful_payment(chat_id, context, tipo, 1.00, limite)
             break
-        await asyncio.sleep(60)  # Verificar a cada 60 segundos
+        await asyncio.sleep(60)
