@@ -208,7 +208,7 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
     referrer_id = context.user_data.get('referrer_id')
     if referrer_id:
         logger.info(f"Registrando compra do usuário {chat_id} referenciado pelo afiliado {referrer_id}")
-        record_affiliate_purchase(referrer_id, chat_id, context)  # Passa o contexto correto
+        await record_affiliate_purchase(referrer_id, chat_id, context)  # Passa o contexto correto e usa await para chamadas assíncronas
 
 async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo, limite: int):
     while True:

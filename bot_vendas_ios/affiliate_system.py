@@ -34,12 +34,10 @@ async def record_affiliate_purchase(affiliate_id, referred_user_id, context):
     finally:
         conn.close()
 
-    success = await grant_user_voucher(affiliate_id, context)
+    # Conceder o vale usuário ao afiliado
+    await grant_user_voucher(affiliate_id, context)
     
-    if success:
-        logger.info(f"Vale usuário de 30 dias concedido ao afiliado {affiliate_id}")
-    else:
-        logger.error(f"Falha ao conceder vale usuário ao afiliado {affiliate_id}")
+    logger.info(f"Vale usuário de 30 dias concedido ao afiliado {affiliate_id}")
 
 def get_affiliate_stats(affiliate_id):
     conn = get_db_connection()
@@ -110,7 +108,14 @@ async def handle_affiliate_start(update: Update, context: ContextTypes.DEFAULT_T
                 already_registered = cursor.fetchone()[0]
                 
                 if not already_registered:
-                    await record_affiliate_purchase(referrer_id, user_id, context)
+                    # Registra a indicação no banco de dados
+                    cursor.execute('''
+                    INSERT INTO affiliates (affiliate_id, referred_user_id, timestamp)
+                    VALUES (?, ?, ?)
+                    ''', (referrer_id, user_id, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+                    
+                    conn.commit()
+                    logger.info(f"Indicação do usuário {user_id} pelo afiliado {referrer_id} registrada com sucesso.")
             except Exception as e:
                 logger.error(f"Erro ao verificar o usuário no banco de dados: {e}")
             finally:
