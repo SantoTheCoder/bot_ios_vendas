@@ -1,4 +1,3 @@
-#payment_handlers.py
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InputFile
 from telegram.ext import ContextTypes
 from mercadopago import gerar_qr_code_mercado_pago, mp, verificar_pagamento_pix
@@ -13,6 +12,7 @@ import json
 import os
 import requests
 from config import IOS_API_KEY  # Importa a chave de API do config.py
+from affiliate_system import record_affiliate_purchase  # Importando a função de registro de afiliação
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +208,12 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
         )
 
         notify_telegram(canal_message, pin_message=True)
+
+    # Verifica se o usuário foi indicado por um afiliado e registra a compra
+    referrer_id = context.user_data.get('referrer_id')
+    if referrer_id:
+        logger.info(f"Registrando compra do usuário {chat_id} referenciado pelo afiliado {referrer_id}")
+        record_affiliate_purchase(referrer_id, chat_id)
 
 async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo, limite: int):
     while True:

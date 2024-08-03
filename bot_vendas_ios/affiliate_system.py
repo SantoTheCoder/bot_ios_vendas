@@ -83,7 +83,7 @@ async def handle_affiliate_start(update: Update, context: ContextTypes.DEFAULT_T
 
     if referrer_id:
         logger.info(f"Usuário {user_id} iniciou o bot através do link de afiliação de {referrer_id}")
-        record_affiliate_purchase(referrer_id, user_id)
+        context.user_data['referrer_id'] = referrer_id  # Armazena o ID do afiliado
         message = f"Você foi indicado por {referrer_id}."
         await update.message.reply_text(message)
 
@@ -101,17 +101,11 @@ def grant_user_voucher(affiliate_id):
     )
     
     logger.info(f"Enviando vale usuário para o afiliado {affiliate_id}")
-    success = notify_affiliate(affiliate_id, voucher_message)
-    
-    if success:
-        logger.info(f"Vale usuário enviado com sucesso para {affiliate_id}")
-        return True
-    else:
-        logger.error(f"Falha ao enviar vale usuário para {affiliate_id}")
-        return False
+    return notify_affiliate(affiliate_id, voucher_message)
 
 def notify_affiliate(affiliate_id, message):
     try:
+        # Envia a mensagem ao afiliado
         context.bot.send_message(chat_id=affiliate_id, text=message, parse_mode=ParseMode.MARKDOWN)
         return True
     except Exception as e:
