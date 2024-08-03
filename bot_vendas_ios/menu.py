@@ -2,6 +2,7 @@ import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from payment_handlers import process_payment
+from affiliate_system import affiliate_dashboard  # Importa a função do affiliate_system
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +57,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data in ['revenda_10', 'revenda_20', 'revenda_50']:
         await process_payment(update, context)  # Processo de pagamento para diferentes planos de revenda
     elif query.data == 'afiliado':
-        await query.edit_message_text("Você escolheu *Afiliado*. Mais informações em breve!", parse_mode="MarkdownV2")
+        await affiliate_dashboard(update, context)  # Exibe o painel de afiliação
     elif query.data == 'suporte':
-        await query.edit_message_text("Você escolheu *Suporte*. Mais informações em breve!", parse_mode="MarkdownV2")
+        await query.edit_message_text("Você escolheu *Suporte*. Mais informações em breve!", parse_mode="Markdown")
     elif query.data == 'start':
         await start_command(update, context)  # Volta ao menu principal
-

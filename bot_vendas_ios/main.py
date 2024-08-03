@@ -2,11 +2,12 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from config import API_KEY
-from notifications import start_scheduled_jobs, report_command  # Importando report_command
+from notifications import start_scheduled_jobs, report_command
 from sales_simulation import simulate_sale_command
 from resellers import create_reseller_command
 from users import create_user_command
-from menu import start_command, button_handler, revenda_menu  # Importando o menu e o sub-menu de revenda
+from menu import start_command, button_handler, revenda_menu
+from affiliate_system import setup_affiliate_handlers, handle_affiliate_start  # Importa as funções do sistema de afiliação
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -15,6 +16,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Verifica se o usuário iniciou o bot com um link de afiliado
+    if context.args:
+        await handle_affiliate_start(update, context)
     await start_command(update, context)
 
 def main():
@@ -31,6 +35,9 @@ def main():
     # Adicionando handler para o sub-menu de revenda
     application.add_handler(CallbackQueryHandler(revenda_menu, pattern='revenda_menu'))
     application.add_handler(CallbackQueryHandler(start_command, pattern='start'))  # Voltar ao início
+
+    # Configurando o sistema de afiliação
+    setup_affiliate_handlers(application)
 
     logger.info("Starting scheduled jobs...")
     start_scheduled_jobs()

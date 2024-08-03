@@ -13,3 +13,8 @@ ACCESS_TOKEN = os.getenv('ACCESS_TOKEN', 'APP_USR-1062519597180352-070416-90b9d9
 CHAVE_PIX = os.getenv('CHAVE_PIX', '28d812de-5fe9-4864-a3b2-d684e1ac4fe5')
 NOME_RECEBEDOR = os.getenv('NOME_RECEBEDOR', 'Veronica Silva')
 CIDADE_RECEBEDOR = os.getenv('CIDADE_RECEBEDOR', 'Campinas')
+
+# Adicione o nome do bot ao config.py
+BOT_NAME = os.getenv('BOT_NAME', '@IOS_TESTE_BOT')
+
+SUPPORT_CONTACT = os.getenv('SUPPORT_CONTACT', '@Pedrooo')
