@@ -1,4 +1,3 @@
-#users.py
 import json
 import random
 import string
@@ -117,6 +116,20 @@ def distribute_user():
         return activated_user
     else:
         logger.warning('Nenhum usuário inativo disponível para distribuição.')
+        return None
+
+def distribute_users(quantidade=1):
+    inactive_users = get_inactive_users()
+    if len(inactive_users) >= quantidade:
+        selected_users = []
+        for _ in range(quantidade):
+            user = inactive_users.pop(0)
+            activated_user = activate_user(user["username"])  # Certifica-se de ativar o usuário
+            selected_users.append(activated_user)
+        logger.info(f'{quantidade} usuários distribuídos.')
+        return selected_users
+    else:
+        logger.warning('Número insuficiente de usuários inativos disponíveis para distribuição.')
         return None
 
 def simulate_sale():

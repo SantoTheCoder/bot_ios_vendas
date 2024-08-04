@@ -12,7 +12,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Definindo os botões inline
     keyboard = [
-        [InlineKeyboardButton("🛒 Internet Ilimitada iOS", callback_data='usuario')],
+        [InlineKeyboardButton("🛒 Internet Ilimitada iOS", callback_data='comprar_ios')],
         [InlineKeyboardButton("💼 Revender iOS", callback_data='revenda_menu')],
         [InlineKeyboardButton("🎯 Afiliado", callback_data='afiliado')],
         [InlineKeyboardButton("🆘 Suporte", url='https://t.me/pedrooo')],  # Adicionando o link para o suporte
@@ -33,6 +33,25 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
 
+# Função para criar o sub-menu de compra de Internet Ilimitada iOS
+async def comprar_ios_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Displaying the Internet Ilimitada iOS menu")
+    
+    # Definindo os botões inline do sub-menu
+    keyboard = [
+        [InlineKeyboardButton("1 Usuário", callback_data='usuario')],
+        [InlineKeyboardButton("2 Usuários", callback_data='usuario_2')],
+        [InlineKeyboardButton("💼 Revender", callback_data='revenda_menu')],
+        [InlineKeyboardButton("⬅️ Voltar", callback_data='start')]
+    ]
+    
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    await update.callback_query.message.edit_text(
+        "Escolha uma das opções abaixo:",
+        reply_markup=reply_markup
+    )
+
 # Função para criar o sub-menu de revenda
 async def revenda_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Displaying the reseller menu")
@@ -43,7 +62,7 @@ async def revenda_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [InlineKeyboardButton("💼 Revenda iOS - 20 Pessoas", callback_data='revenda_20')],
         [InlineKeyboardButton("💼 Revenda iOS - 50 Pessoas", callback_data='revenda_50')],
         [InlineKeyboardButton("📦 Material para Revenda", url='https://t.me/BANNERS_NET_ILIMITADA')],
-        [InlineKeyboardButton("⬅️ Voltar", callback_data='start')]
+        [InlineKeyboardButton("⬅️ Voltar", callback_data='start')]  # Agora este botão volta para o menu principal
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -84,9 +103,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logger.debug(f"Callback data received: {query.data}")
 
-    if query.data == 'usuario':
+    if query.data == 'comprar_ios':
+        logger.debug("Displaying Internet Ilimitada iOS menu")
+        await comprar_ios_menu(update, context)  # Exibe o sub-menu de compra de Internet Ilimitada iOS
+    elif query.data == 'usuario':
         logger.debug("Processing payment for 'usuario'")
-        await process_payment(update, context)  # Processo de pagamento
+        await process_payment(update, context)  # Processo de pagamento para 1 usuário
+    elif query.data == 'usuario_2':
+        logger.debug("Processing payment for 'usuario_2'")
+        await process_payment(update, context)  # Processo de pagamento para 2 usuários
     elif query.data == 'revenda_menu':
         logger.debug("Displaying reseller menu")
         await revenda_menu(update, context)  # Exibe o sub-menu de revenda

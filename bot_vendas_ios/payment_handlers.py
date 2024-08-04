@@ -1,4 +1,3 @@
-#payment_handlers.py
 from telegram import Update, InlineKeyboardButton, InputFile
 from telegram.ext import ContextTypes
 from mercadopago import gerar_qr_code_mercado_pago, mp, verificar_pagamento_pix
@@ -6,15 +5,15 @@ import logging
 import asyncio
 import base64
 from datetime import datetime, timedelta
-from users import distribute_user
+from users import distribute_users
 from resellers import create_reseller
 from notifications import notify_telegram
 import json
 import os
 import requests
-from config import IOS_API_KEY  # Importa a chave de API do config.py
-from affiliate_system import record_affiliate_purchase  # Importando a função de registro de afiliação
-import sqlite3  # Importa o sqlite3 para registro de vendas
+from config import IOS_API_KEY
+from affiliate_system import record_affiliate_purchase
+import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +25,10 @@ def load_revendores():
         with open(REVENDERS_FILE, 'r') as file:
             try:
                 data = json.load(file)
-                # Certifica-se de que 'revendedores' seja um dicionário
                 if isinstance(data, dict) and "revendedores" in data:
                     return data
                 else:
-                    return {"revendedores": {}}  # Inicializa como um dicionário vazio se estiver incorreto
+                    return {"revendedores": {}} 
             except json.JSONDecodeError:
                 return {"revendedores": {}}
     return {"revendedores": {}}
@@ -58,24 +56,31 @@ def renovar_revendedor_painel(username):
 planos = {
     'usuario': {
         'nome': 'Plano 1 Pessoa',
-        'preco': 1,  # Ajustar o preço correto
+        'preco': 1,
         'tipo': 'usuario',
+        'usuarios_entregues': 1
+    },
+    'usuario_2': {
+        'nome': 'Plano 2 Pessoas',
+        'preco': 2,
+        'tipo': 'usuario',
+        'usuarios_entregues': 2
     },
     'revenda_10': {
         'nome': 'Revenda iOS - 10 Pessoas',
-        'preco': 1,  # Valor de R$ 1,00
+        'preco': 1,
         'tipo': 'revenda',
         'limite': 10,
     },
     'revenda_20': {
         'nome': 'Revenda iOS - 20 Pessoas',
-        'preco': 1,  # Valor de R$ 1,00
+        'preco': 1,
         'tipo': 'revenda',
         'limite': 20,
     },
     'revenda_50': {
         'nome': 'Revenda iOS - 50 Pessoas',
-        'preco': 1,  # Valor de R$ 1,00
+        'preco': 1,
         'tipo': 'revenda',
         'limite': 50,
     }
@@ -114,6 +119,7 @@ async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         preco_final = plano_info['preco']
         tipo = plano_info['tipo']
         limite = plano_info.get('limite', None)
+        usuarios_entregues = plano_info.get('usuarios_entregues', 1)
 
         qr_code_data = gerar_qr_code_mercado_pago(preco_final)
 
@@ -136,9 +142,9 @@ async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             await query.message.reply_text(text=message, parse_mode='Markdown')
             logger.info(f"QR Code enviado para o usuário {query.message.chat_id}")
 
-            asyncio.create_task(verificar_pagamento_pix(mp, qr_code_data['id'], query.message.chat.id, context, tipo, limite))
+            asyncio.create_task(verificar_pagamento_pix(mp, qr_code_data['id'], query.message.chat.id, context, tipo, limite, usuarios_entregues))
 
-async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT_TYPE, tipo: str, preco_final: float, limite: int):
+async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT_TYPE, tipo: str, preco_final: float, limite: int, usuarios_entregues: int):
     data_compra = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     chat_info = await context.bot.get_chat(chat_id)
     nome_comprador = chat_info.first_name
@@ -150,26 +156,27 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
     revendedores = load_revendores()
 
     if tipo == "usuario":
-        user = distribute_user() 
-        if user:
-            user_message = (
-                "🎉 **Usuário Criado com Sucesso!** 🎉\n\n"
-                f"🔎 **Usuário:**\n`{user['username']}`\n\n"
-                f"🔑 **Senha:**\n`{user['password']}`\n\n"
-                f"🎯 **Validade:**\n`{user['validity_date']}`\n\n"
-                f"🕟 **Limite de Conexões:**\n`{user['limit']}`\n\n"
-                "📱 **Aplicativos e Arquivos de Configuração:**\n\n"
-                "- **Para iOS:**\n"
-                "  - **Aplicativo:** [Baixe aqui](https://apps.apple.com/us/app/npv-tunnel/id1629465476)\n"
-                "  - **Arquivos de Configuração:** [Clique aqui](https://t.me/+R72mmGw8JMdiZWEx)\n\n"
-                "- **Para Android:**\n"
-                "  - **Aplicativo:** [Baixe aqui](https://www.mediafire.com/file/4l22uh78g37o1yl/Poison+5g+-+DT.apk/file)\n\n"
-                "🌍 **Link de Renovação:**\n"
-                "[Renove aqui](https://poisonbrasil.atlasssh.com/renovar.php)\n"
-                "*Use este link para realizar suas renovações futuras.*"
-            )
-            await context.bot.send_message(chat_id=chat_id, text=user_message, parse_mode="Markdown", disable_web_page_preview=True)
-            logger.info(f"Mensagem de usuário enviada para {chat_id}")
+        users = distribute_users(usuarios_entregues)
+        if users:
+            for user in users:
+                user_message = (
+                    "🎉 **Usuário Criado com Sucesso!** 🎉\n\n"
+                    f"🔎 **Usuário:**\n`{user['username']}`\n\n"
+                    f"🔑 **Senha:**\n`{user['password']}`\n\n"
+                    f"🎯 **Validade:**\n`{user['validity_date']}`\n\n"
+                    f"🕟 **Limite de Conexões:**\n`{user['limit']}`\n\n"
+                    "📱 **Aplicativos e Arquivos de Configuração:**\n\n"
+                    "- **Para iOS:**\n"
+                    "  - **Aplicativo:** [Baixe aqui](https://apps.apple.com/us/app/npv-tunnel/id1629465476)\n"
+                    "  - **Arquivos de Configuração:** [Clique aqui](https://t.me/+R72mmGw8JMdiZWEx)\n\n"
+                    "- **Para Android:**\n"
+                    "  - **Aplicativo:** [Baixe aqui](https://www.mediafire.com/file/4l22uh78g37o1yl/Poison+5g+-+DT.apk/file)\n\n"
+                    "🌍 **Link de Renovação:**\n"
+                    "[Renove aqui](https://poisonbrasil.atlasssh.com/renovar.php)\n"
+                    "*Use este link para realizar suas renovações futuras.*"
+                )
+                await context.bot.send_message(chat_id=chat_id, text=user_message, parse_mode="Markdown", disable_web_page_preview=True)
+                logger.info(f"Mensagem de usuário enviada para {chat_id}")
 
             canal_message = (
                 user_message +  
@@ -177,7 +184,6 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
                 f"📅 **Data da Compra:** {data_compra}\n"
                 f"👤 **Comprador:** {nome_comprador} (ID: {id_comprador})"
             )
-
             notify_telegram(canal_message, pin_message=True)
 
     elif tipo == "revenda" and limite:
@@ -234,15 +240,15 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
     referrer_id = context.user_data.get('referrer_id')
     if referrer_id:
         logger.info(f"Registrando compra do usuário {chat_id} referenciado pelo afiliado {referrer_id}")
-        await record_affiliate_purchase(referrer_id, chat_id, context)  # Passa o contexto correto e usa await para chamadas assíncronas
+        await record_affiliate_purchase(referrer_id, chat_id, context)
 
-async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo, limite: int):
+async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo, limite: int, usuarios_entregues: int):
     while True:
         logger.info(f"Verificando pagamento {id_pagamento}...")
         pagamento_info = mp.get_pagamento(id_pagamento)
         status = pagamento_info.get('status')
         logger.info(f"Status do pagamento {id_pagamento}: {status}")
         if status == 'approved':
-            await process_successful_payment(chat_id, context, tipo, 1.00, limite)
+            await process_successful_payment(chat_id, context, tipo, 1.00, limite, usuarios_entregues)
             break
         await asyncio.sleep(60)
