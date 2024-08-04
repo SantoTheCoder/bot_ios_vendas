@@ -1,1 +1,10 @@
-[]
+{
+    "revendedores": {
+        "5804629795": {
+            "username": "RcLnVM",
+            "limite": 10,
+            "data_compra": "04/08/2024 00:14:17",
+            "validade": "03/09/2024"
+        }
+    }
+}

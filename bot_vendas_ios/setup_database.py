@@ -1,4 +1,3 @@
-#setup_database.py
 import sqlite3
 import logging
 
@@ -48,6 +47,30 @@ def create_users_table():
     finally:
         conn.close()
 
+def create_sales_table():
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sales (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sale_date TEXT NOT NULL,
+            sale_type TEXT NOT NULL, -- 'user' ou 'reseller'
+            amount REAL NOT NULL,
+            buyer_id INTEGER NOT NULL,
+            buyer_name TEXT NOT NULL
+        )
+        ''')
+        
+        conn.commit()
+        logger.info("Tabela 'sales' criada ou já existente no banco de dados.")
+    except sqlite3.Error as e:
+        logger.error(f"Erro ao criar a tabela 'sales': {e}")
+    finally:
+        conn.close()
+
 # Execute as funções uma vez para criar as tabelas
 create_affiliates_table()
 create_users_table()
+create_sales_table()

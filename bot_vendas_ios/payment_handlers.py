@@ -1,4 +1,3 @@
-#payment_handlers.py
 from telegram import Update, InlineKeyboardButton, InputFile
 from telegram.ext import ContextTypes
 from mercadopago import gerar_qr_code_mercado_pago, mp, verificar_pagamento_pix
@@ -25,7 +24,11 @@ def load_revendores():
         with open(REVENDERS_FILE, 'r') as file:
             try:
                 data = json.load(file)
-                return data
+                # Certifica-se de que 'revendedores' seja um dicionário
+                if isinstance(data, dict) and "revendedores" in data:
+                    return data
+                else:
+                    return {"revendedores": {}}  # Inicializa como um dicionário vazio se estiver incorreto
             except json.JSONDecodeError:
                 return {"revendedores": {}}
     return {"revendedores": {}}

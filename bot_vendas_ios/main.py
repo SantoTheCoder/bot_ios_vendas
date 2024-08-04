@@ -1,4 +1,3 @@
-#main.py
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -11,6 +10,7 @@ from menu import start_command, button_handler, revenda_menu
 from affiliate_system import setup_affiliate_handlers, handle_affiliate_start
 from broadcast import setup_broadcast_handlers
 from database import get_db_connection  # Adicionado para registrar os usuários
+from relatorio import generate_report  # Importa a função para gerar relatórios financeiros
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -50,6 +50,7 @@ def main():
     application.add_handler(CommandHandler("createuser", create_user_command))
     application.add_handler(CommandHandler("simulate_sale", simulate_sale_command))
     application.add_handler(CommandHandler("report", report_command))  # Adicionando handler para /report
+    application.add_handler(CommandHandler("relatorio", generate_report))  # Adicionando handler para /relatorio
 
     # Handlers para botões inline (callback queries)
     application.add_handler(CallbackQueryHandler(button_handler))  # Handler principal para botões inline
