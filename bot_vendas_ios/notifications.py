@@ -1,4 +1,3 @@
-#notifications.py
 import requests
 import logging
 import schedule
@@ -24,7 +23,6 @@ def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID, pin_message=False):
         response.raise_for_status()
         logger.info(f"Message sent to Telegram: {message}")
         
-        # Pinar a mensagem se solicitado
         if pin_message:
             message_id = response.json().get("result", {}).get("message_id")
             if message_id:
@@ -32,7 +30,7 @@ def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID, pin_message=False):
                 pin_data = {
                     'chat_id': chat_id,
                     'message_id': message_id,
-                    'disable_notification': True  # Não notificar todos os membros do canal
+                    'disable_notification': True
                 }
                 pin_response = requests.post(pin_url, data=pin_data)
                 pin_response.raise_for_status()
@@ -47,12 +45,12 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     inactive_users = get_inactive_users()
 
     active_list = "\n".join([
-        f"Usuário: `{user['username']}` - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}`\nVendido em: `{user['sale_date']}`\nValidade: `{user['validity_date']}`\n"
         for user in active_users
     ])
 
     inactive_list = "\n".join([
-        f"Usuário: `{user['username']}` - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}`\nCriado em: `{user['creation_date']}`\nValidade: `{user['validity_date']}`\n"
         for user in inactive_users
     ])
 
@@ -67,19 +65,18 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Relatório diário enviado ao canal.")
 
 def send_daily_report():
-    # Esta função pode ser chamada diariamente por um agendamento
     logger.info("Starting to generate daily report...")
-    # Reutiliza a lógica de report_command para enviar o relatório diário
+    
     active_users = get_active_users()
     inactive_users = get_inactive_users()
 
     active_list = "\n".join([
-        f"Usuário: `{user['username']}` - Vendido em: {user['sale_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}`\nVendido em: `{user['sale_date'] or 'N/A'}`\nValidade: `{user['validity_date']}`\n"
         for user in active_users
     ])
 
     inactive_list = "\n".join([
-        f"Usuário: `{user['username']}` - Criado em: {user['validity_date']} - Validade: {user['validity_date']}"
+        f"Usuário: `{user['username']}`\nCriado em: `{user['creation_date']}`\nValidade: `{user['validity_date']}`\n"
         for user in inactive_users
     ])
 
@@ -104,6 +101,5 @@ def start_scheduled_jobs():
             schedule.run_pending()
             time.sleep(1)  # Evitar uso excessivo de CPU
 
-    # Rodar o agendamento em uma nova thread
     scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()

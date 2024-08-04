@@ -91,17 +91,17 @@ def activate_user(username):
     for user in users:
         if user['username'] == username and not user['activated']:
             user['activated'] = True
-            user['sale_date'] = datetime.now().strftime("%d/%m/%Y")
+            sale_date = datetime.now()
+            user['sale_date'] = sale_date.strftime("%d/%m/%Y")
             
             # Verifica se o usuário tem a chave 'creation_date', caso contrário, define uma data padrão
             if 'creation_date' not in user:
                 logger.warning(f"O usuário {username} não tem 'creation_date', definindo para a data atual.")
-                user['creation_date'] = datetime.now().strftime("%d/%m/%Y")
+                user['creation_date'] = sale_date.strftime("%d/%m/%Y")
 
-            # Recalcular a data de validade com base na data de criação
-            creation_date = datetime.strptime(user['creation_date'], "%d/%m/%Y")
-            new_validity_date = (creation_date + timedelta(days=DEFAULT_VALIDITY_DAYS)).strftime("%d/%m/%Y")
-            user['validity_date'] = new_validity_date
+            # Recalcular a data de validade para garantir 30 dias a partir da data de venda
+            new_validity_date = sale_date + timedelta(days=DEFAULT_VALIDITY_DAYS)
+            user['validity_date'] = new_validity_date.strftime("%d/%m/%Y")
             
             save_users(users)
             logger.info(f'Usuário {username} ativado em {user["sale_date"]} com validade até {user["validity_date"]}.')
