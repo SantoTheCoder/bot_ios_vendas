@@ -1,4 +1,3 @@
-#menu.py
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -13,10 +12,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Definindo os botões inline
     keyboard = [
-        [InlineKeyboardButton("🛒 Adquirir Plano iOS", callback_data='usuario')],
-        [InlineKeyboardButton("💼 Tornar-se Revendedor iOS", callback_data='revenda_menu')],
+        [InlineKeyboardButton("🛒 Internet Ilimitada iOS", callback_data='usuario')],
+        [InlineKeyboardButton("💼 Revender iOS", callback_data='revenda_menu')],
         [InlineKeyboardButton("🎯 Afiliado", callback_data='afiliado')],
-        [InlineKeyboardButton("🆘 Suporte", url='https://t.me/pedrooo')]  # Adicionando o link para o suporte
+        [InlineKeyboardButton("🆘 Suporte", url='https://t.me/pedrooo')],  # Adicionando o link para o suporte
+        [InlineKeyboardButton("❤️ Comprar Seguidores, Views, Likes", url='https://t.me/crescimentosocial_bot')]  # Adicionando o botão de seguidores
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
