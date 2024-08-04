@@ -13,6 +13,7 @@ import os
 import requests
 from config import IOS_API_KEY  # Importa a chave de API do config.py
 from affiliate_system import record_affiliate_purchase  # Importando a função de registro de afiliação
+import sqlite3  # Importa o sqlite3 para registro de vendas
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,23 @@ def salvar_qr_code_base64(qr_code_base64: str, file_path: str) -> None:
     with open(file_path, "wb") as f:
         f.write(base64.b64decode(qr_code_base64))
 
+def register_sale(chat_id, sale_type, amount, buyer_name):
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+        INSERT INTO sales (sale_date, sale_type, amount, buyer_id, buyer_name)
+        VALUES (?, ?, ?, ?, ?)
+        ''', (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), sale_type, amount, chat_id, buyer_name))
+        
+        conn.commit()
+        logger.info(f"Venda registrada para {buyer_name} (ID: {chat_id}), Tipo: {sale_type}, Valor: {amount}, Data: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    except Exception as e:
+        logger.error(f"Erro ao registrar a venda para {buyer_name} (ID: {chat_id}): {e}")
+    finally:
+        conn.close()
+
 async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     await query.answer()
@@ -124,6 +142,9 @@ async def process_successful_payment(chat_id: int, context: ContextTypes.DEFAULT
     chat_info = await context.bot.get_chat(chat_id)
     nome_comprador = chat_info.first_name
     id_comprador = chat_id
+
+    # Registro da venda no banco de dados
+    register_sale(chat_id, tipo, preco_final, nome_comprador)
 
     revendedores = load_revendores()
 

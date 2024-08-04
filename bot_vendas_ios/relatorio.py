@@ -1,4 +1,4 @@
-#relatorio.py
+# relatorio.py
 import sqlite3
 import logging
 from datetime import datetime
@@ -26,13 +26,17 @@ def register_sale(sale_type, amount, buyer_id, buyer_name):
 
 async def generate_report(update, context):
     if len(context.args) < 2:
-        await update.message.reply_text("Por favor, forneça uma data inicial e uma data final no formato YYYY-MM-DD.")
+        await update.message.reply_text("Por favor, forneça uma data inicial e uma data final no formato DD/MM/AAAA.")
         return
 
     start_date = context.args[0]
     end_date = context.args[1]
 
     try:
+        # Convertendo as datas fornecidas para o formato utilizado no banco de dados
+        start_date_db = datetime.strptime(start_date, '%d/%m/%Y').strftime('%Y-%m-%d 00:00:00')
+        end_date_db = datetime.strptime(end_date, '%d/%m/%Y').strftime('%Y-%m-%d 23:59:59')
+
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
 
@@ -41,12 +45,13 @@ async def generate_report(update, context):
         FROM sales
         WHERE sale_date BETWEEN ? AND ?
         ORDER BY sale_date
-        ''', (start_date, end_date))
+        ''', (start_date_db, end_date_db))
 
         sales = cursor.fetchall()
         conn.close()
 
         if not sales:
+            logger.info(f"Nenhuma venda encontrada entre {start_date} e {end_date}.")
             await update.message.reply_text(f"Nenhuma venda encontrada entre {start_date} e {end_date}.")
             return
 
