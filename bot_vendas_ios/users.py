@@ -1,10 +1,11 @@
+#users.py
 import json
 import random
 import string
 import logging
 import os
 from datetime import datetime, timedelta
-from config import DEFAULT_VALIDITY_DAYS, DEFAULT_USER_LIMIT, IOS_API_KEY
+from config import DEFAULT_VALIDITY_DAYS, DEFAULT_USER_LIMIT, IOS_API_KEY, ADMIN_ID
 from utils import make_request
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -143,6 +144,11 @@ def simulate_sale():
 
 # Função de comando do Telegram para criar usuários
 async def create_user_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("Você não tem permissão para usar este comando.")
+        return
+
     logger.info("Received /createuser command")
     new_users = create_users(10)
     user_list = "\n".join([f"Usuário: `{user['username']}` - Senha: `{user['password']}`" for user in new_users])

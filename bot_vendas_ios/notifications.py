@@ -4,7 +4,7 @@ import logging
 import schedule
 import time
 import threading
-from config import API_KEY, TELEGRAM_CHAT_ID
+from config import API_KEY, TELEGRAM_CHAT_ID, ADMIN_ID
 from users import get_active_users, get_inactive_users
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -41,6 +41,11 @@ def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID, pin_message=False):
         logger.error(f"Error sending message to Telegram: {e}")
 
 async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("Você não tem permissão para usar este comando.")
+        return
+
     logger.info("Received /report command")
     active_users = get_active_users()
     inactive_users = get_inactive_users()

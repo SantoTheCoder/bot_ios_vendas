@@ -1,7 +1,8 @@
-# relatorio.py
+#relatorio.py
 import sqlite3
 import logging
 from datetime import datetime
+from config import ADMIN_ID
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,11 @@ def register_sale(sale_type, amount, buyer_id, buyer_name):
         conn.close()
 
 async def generate_report(update, context):
+    user_id = str(update.effective_user.id)
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("Você não tem permissão para usar este comando.")
+        return
+
     if len(context.args) < 2:
         await update.message.reply_text("Por favor, forneça uma data inicial e uma data final no formato DD/MM/AAAA.")
         return

@@ -1,6 +1,6 @@
 #resellers.py
 import logging
-from config import IOS_API_KEY, DEFAULT_RESELLER_LIMIT
+from config import IOS_API_KEY, DEFAULT_RESELLER_LIMIT, ADMIN_ID
 from notifications import notify_telegram
 from utils import make_request, generate_random_string
 from telegram import Update
@@ -71,6 +71,11 @@ def create_reseller(limit=DEFAULT_RESELLER_LIMIT, username=None, password=None):
 
 # Função de comando do Telegram para criar revendedor
 async def create_reseller_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    if user_id != ADMIN_ID:
+        await update.message.reply_text("Você não tem permissão para usar este comando.")
+        return
+    
     logger.info("Received /createreseller command")
     
     # Gerar usuário e senha aleatórios
