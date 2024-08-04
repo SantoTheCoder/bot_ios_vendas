@@ -41,31 +41,41 @@ async def generate_report(update, context):
         cursor = conn.cursor()
 
         cursor.execute('''
-        SELECT sale_date, sale_type, amount, buyer_name
+        SELECT sale_type, COUNT(*), SUM(amount)
         FROM sales
         WHERE sale_date BETWEEN ? AND ?
-        ORDER BY sale_date
+        GROUP BY sale_type
         ''', (start_date_db, end_date_db))
 
-        sales = cursor.fetchall()
+        sales_summary = cursor.fetchall()
         conn.close()
 
-        if not sales:
+        if not sales_summary:
             logger.info(f"Nenhuma venda encontrada entre {start_date} e {end_date}.")
             await update.message.reply_text(f"Nenhuma venda encontrada entre {start_date} e {end_date}.")
             return
 
-        report = f"📊 *Relatório de Vendas de {start_date} a {end_date}:* 📊\n\n"
-        total_amount = 0
+        total_usuarios = 0
+        total_revendas = 0
+        valor_total = 0.0
 
-        for sale in sales:
-            sale_date, sale_type, amount, buyer_name = sale
-            report += f"Data: {sale_date}\nTipo: {sale_type}\nValor: R$ {amount:.2f}\nComprador: {buyer_name}\n\n"
-            total_amount += amount
+        for sale in sales_summary:
+            sale_type, count, amount_sum = sale
+            if sale_type == 'usuario':
+                total_usuarios = count
+            elif sale_type == 'revenda':
+                total_revendas = count
+            valor_total += amount_sum
 
-        report += f"🔹 *Total Vendido:* R$ {total_amount:.2f}\n"
+        report = (
+            f"📊 *Relatório Resumido de Vendas de {start_date} a {end_date}:* 📊\n\n"
+            f"🔹 *Total de Vendas de Usuários:* {total_usuarios}\n"
+            f"🔹 *Total de Vendas de Revenda:* {total_revendas}\n"
+            f"💰 *Valor Total Vendido:* R$ {valor_total:.2f}\n"
+        )
 
         await update.message.reply_text(report, parse_mode="Markdown")
+        logger.info(f"Relatório resumido gerado com sucesso de {start_date} a {end_date}.")
     except sqlite3.Error as e:
         logger.error(f"Erro ao gerar o relatório: {e}")
         await update.message.reply_text("Erro ao gerar o relatório.")
