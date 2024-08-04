@@ -14,9 +14,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("🛒 Internet Ilimitada iOS", callback_data='comprar_ios')],
         [InlineKeyboardButton("💼 Revender iOS", callback_data='revenda_menu')],
-        [InlineKeyboardButton("🎯 Afiliado", callback_data='afiliado')],
+        [InlineKeyboardButton("👤 Afiliados", callback_data='afiliado')],
         [InlineKeyboardButton("🆘 Suporte", url='https://t.me/pedrooo')],  # Adicionando o link para o suporte
-        [InlineKeyboardButton("❤️ Comprar Seguidores, Views, Likes", url='https://t.me/crescimentosocial_bot')]  # Adicionando o botão de seguidores
+        [InlineKeyboardButton("❤️ Seguidores, Views, Likes", url='https://t.me/crescimentosocial_bot')]  # Adicionando o botão de seguidores
     ]
     
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -39,8 +39,8 @@ async def comprar_ios_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     # Definindo os botões inline do sub-menu
     keyboard = [
-        [InlineKeyboardButton("1 Usuário", callback_data='usuario')],
-        [InlineKeyboardButton("2 Usuários", callback_data='usuario_2')],
+        [InlineKeyboardButton("1 Pessoa IOS 📲", callback_data='usuario')],
+        [InlineKeyboardButton("2 Pessoas IOS 📲", callback_data='usuario_2')],
         [InlineKeyboardButton("💼 Revender", callback_data='revenda_menu')],
         [InlineKeyboardButton("⬅️ Voltar", callback_data='start')]
     ]
