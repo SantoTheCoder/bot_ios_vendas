@@ -25,12 +25,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Verifica se é uma mensagem normal ou um callback query
     if update.message:
         await update.message.reply_text(
-            "Bem-vindo ao Bot de Vendas para iOS! Por favor, escolha uma das opções abaixo:",
+            "Bem-vindo ao Nosso Novo Bot de Vendas para iOS! Por favor, escolha uma das opções abaixo:",
             reply_markup=reply_markup
         )
     elif update.callback_query:
         await update.callback_query.message.edit_text(
-            "Bem-vindo ao Bot de Vendas para iOS! Por favor, escolha uma das opções abaixo:",
+            "Bem-vindo ao Nosso Novo Bot de Vendas para iOS! Por favor, escolha uma das opções abaixo:",
             reply_markup=reply_markup
         )
 

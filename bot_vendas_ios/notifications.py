@@ -1,4 +1,3 @@
-#notifications.py
 import requests
 import logging
 import schedule
@@ -40,6 +39,11 @@ def notify_telegram(message, chat_id=TELEGRAM_CHAT_ID, pin_message=False):
     except requests.exceptions.RequestException as e:
         logger.error(f"Error sending message to Telegram: {e}")
 
+async def send_message_in_chunks(text, chat_id, context, chunk_size=4096):
+    # Divide o texto em pedaços menores se necessário
+    for i in range(0, len(text), chunk_size):
+        await context.bot.send_message(chat_id=chat_id, text=text[i:i+chunk_size], parse_mode="Markdown")
+
 async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     if user_id != ADMIN_ID:
@@ -67,7 +71,7 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     logger.info("Sending report to Telegram")
-    notify_telegram(report_message, chat_id=TELEGRAM_CHAT_ID)
+    await send_message_in_chunks(report_message, TELEGRAM_CHAT_ID, context)
     await update.message.reply_text("Relatório diário enviado ao canal.")
 
 def send_daily_report():
