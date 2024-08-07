@@ -1,4 +1,3 @@
-#mercadopago.py
 import requests
 import json
 import uuid
@@ -67,7 +66,7 @@ async def verificar_pagamento_pix(mp, id_pagamento, chat_id, context, tipo):
         
         await asyncio.sleep(60)  # Verificar a cada 60 segundos
 
-def gerar_qr_code_mercado_pago(valor: float) -> dict:
+def gerar_qr_code_mercado_pago(valor: float, payer_info: dict) -> dict:
     url = "https://api.mercadopago.com/v1/payments"
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -78,15 +77,7 @@ def gerar_qr_code_mercado_pago(valor: float) -> dict:
         "transaction_amount": valor,
         "description": "Pagamento com PIX",
         "payment_method_id": "pix",
-        "payer": {
-            "email": "test_user_123@testuser.com",
-            "first_name": "Test",
-            "last_name": "User",
-            "identification": {
-                "type": "CPF",
-                "number": "19119119100"
-            }
-        }
+        "payer": payer_info  # Dados dinâmicos do pagador
     }
 
     try:
@@ -102,7 +93,7 @@ def gerar_qr_code_mercado_pago(valor: float) -> dict:
     except requests.exceptions.HTTPError as err:
         logger.error(f"HTTP error occurred: {err}")
         logger.error(f"Response content: {response.content}")
-        logger.error(f"Payload sent: {payload}")
+        logger.error(f"Payload sent: {json.dumps(payload, indent=4)}")
     except Exception as err:
         logger.error(f"Other error occurred: {err}")
     
@@ -110,3 +101,17 @@ def gerar_qr_code_mercado_pago(valor: float) -> dict:
 
 # Criando a instância de MercadoPago
 mp = MercadoPago(ACCESS_TOKEN)
+
+# Exemplo de uso com informações reais do pagador
+payer_info = {
+    "email": "poison@gmail.com",
+    "first_name": "IOS 4G",
+    "last_name": "Ilimitado",
+    "identification": {
+        "type": "CPF",
+        "number": "08005204833"  # Substitua pelo CPF real do pagador
+    }
+}
+
+# Geração do QR Code com informações reais do pagador
+qr_code_data = gerar_qr_code_mercado_pago(valor=100.0, payer_info=payer_info)

@@ -1,4 +1,3 @@
-#payment_handlers.py
 from telegram import Update, InlineKeyboardButton, InputFile
 from telegram.ext import ContextTypes
 from mercadopago import gerar_qr_code_mercado_pago, mp, verificar_pagamento_pix
@@ -122,7 +121,19 @@ async def process_payment(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         limite = plano_info.get('limite', None)
         usuarios_entregues = plano_info.get('usuarios_entregues', 1)
 
-        qr_code_data = gerar_qr_code_mercado_pago(preco_final)
+        # Definindo as informações do pagador (payer_info)
+        payer_info = {
+            "email": "poison@gmail.com",
+            "first_name": "IOS 4G",
+            "last_name": "Ilimitado",
+            "identification": {
+                "type": "CPF",
+                "number": "08005204833"  # Substitua pelo CPF real do pagador
+            }
+        }
+
+        # Agora passamos o payer_info para a função gerar_qr_code_mercado_pago
+        qr_code_data = gerar_qr_code_mercado_pago(preco_final, payer_info)
 
         if not qr_code_data:
             message = "Erro ao obter o QR Code."
